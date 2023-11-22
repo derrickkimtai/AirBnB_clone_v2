@@ -41,7 +41,7 @@ class HBNBCommand(cmd.Cmd):
         Usage: <class name>.<command>([<id> [<*args> or <**kwargs>]])
         (Brackets denote optional fields in usage example.)
         """
-        _cmd = _cls = _id = _args = ''  # initialize line elements
+        _cmd = _cls = _id = _args = ''  # initialize line elems
 
         # scan for general formating - i.e '.', '(', ')'
         if not ('.' in line and '(' in line and ')' in line):
@@ -114,18 +114,39 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def do_create(self, args):
-        """ Create an object of any class"""
-        if not args:
+        """Create an object of any class"""
+        list_arg = args.split()
+        my_dict = {}
+        if len(args) == 0:
             print("** class name missing **")
             return
-        elif args not in HBNBCommand.classes:
+        if list_arg[0] in HBNBCommand.classes:
+            for elem in list_arg:
+                if "=" in elem:
+                    key = elem.split("=")[0]
+                    value = elem.split("=")[1]
+                    if "\"" in value:
+                        value = value[1:-1]
+                        if '_' in value:
+                            value = value.replace('_', ' ')
+                    elif "." in value:
+                        value = float(value)
+                    else:
+                        value = int(value)
+                    my_dict[key] = value
+            obj = HBNBCommand.classes[list_arg[0]]()
+            for key, value in my_dict.items():
+                if hasattr(obj, key):
+                    setattr(obj, key, value)
+            obj.save()
+            print("{}".format(obj.id))
+        else:
             print("** class doesn't exist **")
-            return
-        new_instance = HBNBCommand.classes[args]()
-        storage.save()
-        print(new_instance.id)
-        storage.save()
 
+    def help_create(self):
+        """ Help information for the create method """
+        print("Creates a class of any type")
+        print("[Usage]: create <className>\n")
     def help_create(self):
         """ Help information for the create method """
         print("Creates a class of any type")
@@ -322,3 +343,4 @@ class HBNBCommand(cmd.Cmd):
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()
+
