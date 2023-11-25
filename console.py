@@ -2,14 +2,16 @@
 """ Console Module """
 import cmd
 import sys
-from models.base_model import BaseModel
-from models.__init__ import storage
-from models.user import User
-from models.place import Place
-from models.state import State
+import models
 from models.city import City
-from models.amenity import Amenity
+from models.user import User
+from models.state import State
+from models.place import Place
 from models.review import Review
+from models.amenity import Amenity
+from models.__init__ import storage
+from models.base_model import BaseModel
+from models.engine.file_storage import FileStorage
 
 
 class HBNBCommand(cmd.Cmd):
@@ -37,11 +39,10 @@ class HBNBCommand(cmd.Cmd):
 
     def precmd(self, line):
         """Reformat command line for advanced command syntax.
-
         Usage: <class name>.<command>([<id> [<*args> or <**kwargs>]])
         (Brackets denote optional fields in usage example.)
         """
-        _cmd = _cls = _id = _args = ''  # initialize line elems
+        _cmd = _cls = _id = _args = ''  # initialize line elements
 
         # scan for general formating - i.e '.', '(', ')'
         if not ('.' in line and '(' in line and ')' in line):
@@ -73,7 +74,7 @@ class HBNBCommand(cmd.Cmd):
                 pline = pline[2].strip()  # pline is now str
                 if pline:
                     # check for *args or **kwargs
-                    if pline[0] is '{' and pline[-1] is '}'\
+                    if pline[0] is '{' and pline[-1] is'}'\
                             and type(eval(pline)) is dict:
                         _args = pline
                     else:
@@ -115,16 +116,16 @@ class HBNBCommand(cmd.Cmd):
 
     def do_create(self, args):
         """Create an object of any class"""
-        list_arg = args.split()
+        arg_list = args.split()
         my_dict = {}
         if len(args) == 0:
             print("** class name missing **")
             return
-        if list_arg[0] in HBNBCommand.classes:
-            for elem in list_arg:
-                if "=" in elem:
-                    key = elem.split("=")[0]
-                    value = elem.split("=")[1]
+        if arg_list[0] in HBNBCommand.classes:
+            for element in arg_list:
+                if "=" in element:
+                    key = element.split("=")[0]
+                    value = element.split("=")[1]
                     if "\"" in value:
                         value = value[1:-1]
                         if '_' in value:
@@ -134,7 +135,7 @@ class HBNBCommand(cmd.Cmd):
                     else:
                         value = int(value)
                     my_dict[key] = value
-            obj = HBNBCommand.classes[list_arg[0]]()
+            obj = HBNBCommand.classes[arg_list[0]]()
             for key, value in my_dict.items():
                 if hasattr(obj, key):
                     setattr(obj, key, value)
@@ -142,11 +143,6 @@ class HBNBCommand(cmd.Cmd):
             print("{}".format(obj.id))
         else:
             print("** class doesn't exist **")
-
-    def help_create(self):
-        """ Help information for the create method """
-        print("Creates a class of any type")
-        print("[Usage]: create <className>\n")
 
     def help_create(self):
         """ Help information for the create method """
@@ -209,8 +205,7 @@ class HBNBCommand(cmd.Cmd):
         key = c_name + "." + c_id
 
         try:
-
-            del (storage.all()[key])
+            del(storage.all()[key])
             storage.save()
         except KeyError:
             print("** no instance found **")
@@ -220,23 +215,19 @@ class HBNBCommand(cmd.Cmd):
         print("Destroys an individual instance of a class")
         print("[Usage]: destroy <className> <objectId>\n")
 
-    def do_all(self, args):
-        """ Shows all objects, or all objects of a class"""
-        print_list = []
-
-        if args:
-            args = args.split(' ')[0]  # remove possible trailing args
-            if args not in HBNBCommand.classes:
-                print("** class doesn't exist **")
-                return
-            for k, v in storage._FileStorage__objects.items():
-                if k.split('.')[0] == args:
-                    print_list.append(str(v))
+    def do_all(self, arg):
+        """
+        Prints all string representation of all instances
+        based or not on the class name.
+        Ex: $ all BaseModel or $ all
+        """
+        if len(arg) == 0:
+            print([str(value) for value in models.storage.all().values()])
+        elif arg not in self.classes:
+            print("** class doesn't exist **")
         else:
-            for k, v in storage._FileStorage__objects.items():
-                print_list.append(str(v))
-
-        print(print_list)
+            print([str(value) for key, value in models.storage.all().items()
+                   if arg in key])
 
     def help_all(self):
         """ Help information for the all command """
@@ -342,7 +333,6 @@ class HBNBCommand(cmd.Cmd):
         """ Help information for the update class """
         print("Updates an object with new information")
         print("Usage: update <className> <id> <attName> <attVal>\n")
-
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()
