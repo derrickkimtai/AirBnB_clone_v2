@@ -6,6 +6,9 @@ import time
 env.hosts = ['52.87.222.116', '54.209.112.128']
 
 def do_pack():
+    """
+        store the path of the created archive
+    """
     # Define the path of the archive
     archive_path = "versions/web_static_{}.tgz".format(int(time.time()))
     # Use tar to create the archive
@@ -14,6 +17,9 @@ def do_pack():
     return archive_path
 
 def do_deploy(archive_path):
+    """
+        creates and distributes an archive to your web
+    """
     # Check if the archive exists
     if not os.path.exists(archive_path):
         return False
@@ -35,6 +41,9 @@ def do_deploy(archive_path):
     return True
 
 def deploy():
+    """
+        Call the do_deploy(archive_path) function, using the new path of the new archive
+    """
     # Call do_pack and store the path of the archive
     archive_path = do_pack()
     # Call do_deploy with the path of the archive
