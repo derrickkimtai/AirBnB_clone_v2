@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/python3
 from fabric.api import env, local, put, run
 import os 
 import time
