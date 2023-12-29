@@ -6,6 +6,7 @@ from models.place import Place
 from sqlalchemy.orm import relationship
 from models.base_model import BaseModel, Base
 from sqlalchemy import Column, Integer, String, ForeignKey
+from os import getenv
 
 
 class State(BaseModel, Base):
