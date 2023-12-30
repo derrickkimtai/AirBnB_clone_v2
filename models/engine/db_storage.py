@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from os import getenv
 from models.base_model import Base
+import sys
 
 class DBStorage:
     """Initialize database"""
@@ -27,17 +28,22 @@ class DBStorage:
 
     def all(self, cls=None):
         """Returns a query containing objects"""
-        dic_objects = {}
+        objects_dict = {}
+        
         if cls:
-            for obj in self.__session.query(eval(cls)).all():
-                key = "{}.{}".format(obj.__class__.__name__, obj.id)
-                dic_objects[key] = obj
-        else:
-            for subcls in Base.__subclasses__():
-                for obj in self.__session.query(subcls).all():
+            try:
+                class_obj = getattr(sys.modules[__name__], cls)
+                for obj in self.__session.query(class_obj).all():
                     key = "{}.{}".format(obj.__class__.__name__, obj.id)
-                    dic_objects[key] = obj
-        return dic_objects
+                    objects_dict[key] = obj
+            except Exception as e:
+                print(f"Error: {e}. Class {cls} not found or invalid.")
+        else:
+            for subclass in Base.__subclasses__():
+                for obj in self.__session.query(subclass).all():
+                    key = "{}.{}".format(obj.__class__.__name__, obj.id)
+                    objects_dict[key] = obj
+        return objects_dict
 
     def new(self, obj):
         """Add/make object to the current database session"""
